@@ -1552,6 +1552,13 @@ def test_colour_unknown():
             t.update()
 
 
+@mark.parametrize("colour", ["#00ff0g", "#zzzzzz", "#1g2345"])
+def test_colour_unknown_hex(colour):
+    """unparsable hex should warn like any other unknown colour (#3)"""
+    with warns(TqdmWarning, match="Unknown colour"):
+        assert "5/10" in tqdm.format_meter(5, 10, 1.0, colour=colour)
+
+
 def test_closed_file(tmp_file):
     for i in trange(9, file=tmp_file, miniters=1, mininterval=0):
         if i == 5:
