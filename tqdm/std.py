@@ -19,8 +19,8 @@ from weakref import WeakSet
 from ._monitor import TMonitor
 from .utils import (
     CallbackIOWrapper, Comparable, DisableOnWriteError, FormatReplace, SimpleTextIOWrapper,
-    _is_ascii, _screen_shape_wrapper, _supports_unicode, _term_move_up, disp_len, disp_trim,
-    envwrap)
+    _env_bool_or_str, _is_ascii, _screen_shape_wrapper, _supports_unicode, _term_move_up,
+    disp_len, disp_trim, envwrap)
 
 __author__ = "https://github.com/tqdm/tqdm#contributions"
 __all__ = ['tqdm', 'trange',
@@ -957,7 +957,8 @@ class tqdm(Comparable):
 
     # override defaults via env vars
     @envwrap("tqdm", is_method=True, types={'total': float, 'ncols': int, 'miniters': float,
-                                            'position': int, 'nrows': int})
+                                            'position': int, 'nrows': int,
+                                            'ascii': _env_bool_or_str})
     def __init__(self, iterable=None, desc=None, total=None, leave=True, file=None,
                  ncols=None, mininterval=0.1, maxinterval=10.0, miniters=None,
                  ascii=None,  # pylint: disable=redefined-builtin
@@ -1043,6 +1044,8 @@ class tqdm(Comparable):
 
         if ascii is None:
             ascii = not _supports_unicode(file)
+        elif ascii is not True and not isinstance(ascii, str):
+            ascii = bool(ascii)  # e.g. `ascii=1`, else the value is used as the charset
 
         if bar_format and ascii is not True and not _is_ascii(ascii):
             # Convert bar format into unicode since terminal uses unicode

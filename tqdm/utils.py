@@ -31,6 +31,24 @@ else:
         colorama.init()
 
 
+def _env_bool(val):
+    """`str` -> `bool` for `envwrap` (`bool('False')` is True)"""
+    val = str(val).strip().lower()
+    if val in ('1', 'true', 'yes', 'on'):
+        return True
+    if val in ('', '0', 'false', 'no', 'off'):
+        return False
+    raise ValueError(f"{val} : bool")
+
+
+def _env_bool_or_str(val):
+    """as `_env_bool`, but non-boolean words pass through (e.g. an `ascii` charset)"""
+    try:
+        return _env_bool(val)
+    except ValueError:
+        return val
+
+
 def envwrap(name, app="", types=None, is_method=False):
     """
     Basic (env-only) version of [envwrap](https://github.com/tqdm/envwrap).
@@ -68,7 +86,9 @@ def envwrap(name, app="", types=None, is_method=False):
                         break
             elif param.default is not None:  # type of default value
                 try:
-                    overrides[k] = type(param.default)(overrides[k])
+                    # `bool('False')` is True, so booleans need parsing rather than casting
+                    typ = _env_bool if isinstance(param.default, bool) else type(param.default)
+                    overrides[k] = typ(overrides[k])
                 except ValueError:  # unparsable: ignore override
                     unparsable.add(k)
             else:

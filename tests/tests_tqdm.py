@@ -747,6 +747,14 @@ def test_unicode_bar():
     assert "20%|\u2588\u2588" in res[3]
 
 
+@mark.parametrize("ascii_,bar", [(1, '#'), (0, '█')])
+def test_ascii_int(tmp_file, ascii_, bar):
+    """an int `ascii` is a bool, not a charset (#12)"""
+    with tqdm(total=2, file=tmp_file, ascii=ascii_, mininterval=0) as t:
+        t.update()
+    assert bar in tmp_file.getvalue()
+
+
 @mark.parametrize("bars", [" .oO0", " #"])
 def test_custom_bar(tmp_file, bars):
     for _ in tqdm(range(len(bars) - 1), file=tmp_file, miniters=1,
