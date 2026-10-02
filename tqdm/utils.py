@@ -67,7 +67,10 @@ def envwrap(name, app="", types=None, is_method=False):
                     else:
                         break
             elif param.default is not None:  # type of default value
-                overrides[k] = type(param.default)(overrides[k])
+                try:
+                    overrides[k] = type(param.default)(overrides[k])
+                except ValueError:  # unparsable: ignore override
+                    unparsable.add(k)
             else:
                 try:  # `types` fallback
                     overrides[k] = types[k](overrides[k])
@@ -75,7 +78,7 @@ def envwrap(name, app="", types=None, is_method=False):
                     pass
                 except ValueError:  # unparsable: ignore override
                     unparsable.add(k)
-        for k in unparsable:  # cannot use the default if it was overridden
+        for k in unparsable:  # ignore rather than pass on the unparsable value
             del overrides[k]
         return part(func, **overrides)
     return wrap
