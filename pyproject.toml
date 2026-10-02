@@ -9,9 +9,9 @@ include = ["tqdm", "tqdm.*"]
 
 [project.urls]
 homepage = "https://tqdm.github.io"
-repository = "https://github.com/tqdm/tqdm"
+repository = "https://github.com/talonwr/tqdm"
 changelog = "https://tqdm.github.io/releases"
-wiki = "https://github.com/tqdm/tqdm/wiki"
+wiki = "https://github.com/talonwr/tqdm/wiki"
 
 [project]
 name = "tqdm"
