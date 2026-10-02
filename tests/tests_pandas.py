@@ -1,3 +1,5 @@
+import io
+
 from pytest import importorskip, mark
 
 from tqdm import tqdm, tqdm_pandas
@@ -16,6 +18,52 @@ def test_pandas_setup(caperr):
     series = pd.Series(randint(0, 50, (100,)))
     series.progress_apply(lambda x: x + 10)
     assert '100/123' in caperr()
+
+
+def test_pandas_setup_reuse(caperr):
+    """`total=` given to `tqdm.pandas()` applies to every call (issue #1)"""
+    tqdm.pandas(leave=True, ascii=True, total=123)
+    series = pd.Series(randint(0, 50, (100,)))
+    series.progress_apply(lambda x: x + 10)
+    series.progress_apply(lambda x: x + 10)
+    assert caperr().count('100/123') == 2
+
+
+def test_pandas_setup_reuse_map(caperr):
+    """`total=` applies to every `progress_map` call, not just `progress_apply`"""
+    tqdm.pandas(leave=True, ascii=True, total=50)
+    series = pd.Series(randint(0, 50, (100,)))
+    series.progress_map(lambda x: x + 10)
+    series.progress_map(lambda x: x + 10)
+    # `n` stops advancing at `total`, so a reused `total=50` renders `50/50`;
+    # a dropped `total` would fall back to `len(series)` and render `100/100`
+    assert caperr().count('50/50') == 2
+    assert '100/100' not in caperr()
+
+
+def test_pandas_setup_reuse_aggregate(caperr):
+    """`total=` applies to every `progress_aggregate` call on a groupby"""
+    # `total=7` deliberately differs from the group's `ngroups=2`, so that a
+    # dropped `total` falls back to `2/2` and is distinguishable from `2/7`
+    tqdm.pandas(leave=True, ascii=True, total=7)
+    df = pd.DataFrame({'a': [0, 1] * 50, 'b': randint(0, 50, (100,))})
+    df.groupby('a').progress_aggregate(lambda x: x.sum())
+    df.groupby('a').progress_aggregate(lambda x: x.sum())
+    assert caperr().count('2/7') == 2
+    assert '2/2' not in caperr()
+
+
+def test_pandas_setup_zero_total():
+    """an explicit `total=0` is honoured, rather than falling back to `len(df)`"""
+    file = io.StringIO()
+    tqdm.pandas(leave=True, ascii=True, total=0, file=file)
+    series = pd.Series(randint(0, 50, (100,)))
+    series.progress_apply(lambda x: x + 10)
+    series.progress_apply(lambda x: x + 10)
+    # tqdm renders no denominator when `total == 0`; a `100/100` bar would
+    # mean `total=0` was ignored and `len(series)` was computed instead
+    assert '100/100' not in file.getvalue()
+    assert file.getvalue().count('100it') == 2
 
 
 def test_pandas_rolling_expanding(caperr):
