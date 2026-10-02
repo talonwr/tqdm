@@ -139,8 +139,9 @@ class tqdm_rich(std_tqdm):  # pragma: no cover
         ----------
         total  : int or float, optional. Total to use for the new bar.
         """
-        if hasattr(self, '_prog'):
-            self._prog.reset(total=total)
+        if hasattr(self, '_task_id'):
+            # `rich.progress.Progress.reset()` requires the task id (#13)
+            self._prog.reset(self._task_id, total=total)
         super().reset(total=total)
 
 

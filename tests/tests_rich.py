@@ -29,3 +29,28 @@ def test_rich_fraction_column_no_total():
         total = 10
 
     assert rich.FractionColumn().render(SizedTask()).plain == "3/10 "
+
+
+@mark.filterwarnings("ignore:rich is experimental/alpha:tqdm.std.TqdmExperimentalWarning")
+def test_rich_reset():
+    """Test `tqdm.rich.reset()` resets the underlying `rich` task (#13)"""
+    rich = importorskip('tqdm.rich')
+
+    with rich.tqdm(total=3, mininterval=0, miniters=0) as pbar:
+        for _ in range(3):
+            pbar.update()
+        task = pbar._prog.tasks[pbar._task_id]
+        assert (task.completed, task.total) == (3, 3)
+
+        pbar.reset(total=10)
+        assert (pbar.n, pbar.total) == (0, 10)
+        assert (task.completed, task.total) == (0, 10)
+
+        # the bar is usable again
+        for _ in range(3):
+            pbar.update()
+        assert (task.completed, task.total) == (3, 10)
+
+        # `total=None` keeps the current total
+        pbar.reset()
+        assert (task.completed, task.total) == (0, 10)
