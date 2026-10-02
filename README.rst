@@ -1040,7 +1040,7 @@ for ``DataFrame.progress_apply`` and ``DataFrameGroupBy.progress_apply``:
 
     df = pd.DataFrame(np.random.randint(0, 100, (100000, 6)))
 
-    # Register `pandas.progress_apply` and `pandas.Series.map_apply` with `tqdm`
+    # Register `pandas.progress_apply` and `pandas.progress_map` with `tqdm`
     # (can use `tqdm.gui.tqdm`, `tqdm.notebook.tqdm`, optional kwargs, etc.)
     tqdm.pandas(desc="my bar!")
 
