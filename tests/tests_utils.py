@@ -62,3 +62,15 @@ def test_envwrap_annotations(monkeypatch):
         return number, string
 
     assert 1.1, "1.1" == annotated()
+
+
+def test_envwrap_unparsable(monkeypatch):
+    """unparsable values should be ignored, not raise (#2)"""
+    monkeypatch.setenv('FUNC_number', "abc")
+    monkeypatch.setenv('FUNC_default', "abc")
+
+    @envwrap("func", types={'number': int})
+    def func(number=None, default=1.0):
+        return number, default
+
+    assert (None, 1.0) == func()
