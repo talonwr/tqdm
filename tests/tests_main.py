@@ -195,3 +195,43 @@ def test_exceptions(capsysbinary, monkeypatch):
     for i in ('-h', '--help', '-v', '--version'):
         with raises(SystemExit):
             main(argv=[i])
+
+
+@mark.parametrize("argv", [['--update'], ['--update', '--total', '10']])
+def test_main_update_negative(monkeypatch, argv):
+    """`--update` must reject a negative count, not render `-3/10` (#28)"""
+    monkeypatch.setattr(sys, 'stdin', [b'-3\n'])
+    with raises(TqdmTypeError, match="negative value"):
+        main(sys.stderr, argv)
+
+
+@mark.parametrize("value", ['0', '3', '2.5', '1e3'])
+def test_main_update_valid(capsysbinary, monkeypatch, value):
+    """valid `--update` input must be unaffected by the negative check (#28)"""
+    monkeypatch.setattr(sys, 'stdin', [(value + '\n').encode()])
+    main(sys.stderr, ['--update', '--total', '10'])
+    out, err = capsysbinary.readouterr()
+    assert norm(out) == (value + '\n').encode()
+    assert b'it/s' in err
+
+
+def test_main_update_to_descending(capsysbinary, monkeypatch):
+    """`--update_to` may go backwards: negative delta, but target stays >= 0"""
+    monkeypatch.setattr(sys, 'stdin', [b'5\n', b'2\n'])
+    main(sys.stderr, ['--update_to', '--total', '10'])
+    out, err = capsysbinary.readouterr()
+    assert norm(out) == b'5\n2\n' and b'2/10' in err
+
+
+def test_main_update_to_negative(monkeypatch):
+    """`--update_to` target must also be rejected when negative (#28)"""
+    monkeypatch.setattr(sys, 'stdin', [b'-5\n'])
+    with raises(TqdmTypeError, match="negative value"):
+        main(sys.stderr, ['--update_to', '--total', '10'])
+
+
+def test_main_update_non_numeric(monkeypatch):
+    """non-numeric `--update` input still fails loudly; see #21, unchanged here"""
+    monkeypatch.setattr(sys, 'stdin', [b'abc\n'])
+    with raises(ValueError):
+        main(sys.stderr, ['--update', '--total', '10'])

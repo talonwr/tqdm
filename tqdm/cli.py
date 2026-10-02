@@ -52,6 +52,14 @@ def cast(val, typ):
     raise TqdmTypeError(f"{val} : {typ}")
 
 
+def _decode_update(i):
+    """`literal_eval` an input line, rejecting negative iteration counts"""
+    n = literal_eval(i.decode())
+    if n < 0:
+        raise TqdmTypeError(f"negative value: {n}")
+    return n
+
+
 def posix_pipe(fin, fout, delim=b'\\n', buf_size=256,
                callback=lambda float: None, callback_len=True):
     """
@@ -298,10 +306,10 @@ Options:
                 with tqdm(**tqdm_args) as t:
                     if update:
                         def callback(i):
-                            t.update(literal_eval(i.decode()))
+                            t.update(_decode_update(i))
                     else:  # update_to
                         def callback(i):
-                            t.update(literal_eval(i.decode()) - t.n)
+                            t.update(_decode_update(i) - t.n)
                     for i in stdin:
                         write(i)
                         callback(i)
@@ -314,10 +322,10 @@ Options:
                 callback_len = False
                 if update:
                     def callback(i):
-                        t.update(literal_eval(i.decode()))
+                        t.update(_decode_update(i))
                 elif update_to:
                     def callback(i):
-                        t.update(literal_eval(i.decode()) - t.n)
+                        t.update(_decode_update(i) - t.n)
                 else:
                     callback = t.update
                     callback_len = True
