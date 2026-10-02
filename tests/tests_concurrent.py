@@ -11,10 +11,15 @@ def dummy_func(x):
     return x + 1
 
 
+def dummy_func2(x, y):
+    return x + y
+
+
 def test_min_map_len():
     assert concurrent._min_map_len([]) == 0
     assert concurrent._min_map_len([(i for i in range(9))]) == 0
-    assert concurrent._min_map_len([(i for i in range(9)), range(5)]) == 5
+    assert concurrent._min_map_len([range(9), range(5)]) == 5
+    assert concurrent._min_map_len([(i for i in range(9)), range(5)]) == 0
 
 
 @mark.parametrize("mapper", [interpreter_map, process_map, thread_map])
@@ -38,6 +43,18 @@ def test_concurrent_map_unknown_len(mapper, caperr):
         skip(str(err))
     err = caperr()
     assert '9it [' in err
+
+
+@mark.parametrize("mapper", [interpreter_map, process_map, thread_map])
+def test_concurrent_map_mixed_len(mapper, caperr):
+    """`Executor.map` stops at the shortest, so the total is unknown (#10)"""
+    try:
+        assert mapper(dummy_func2, range(5), (i for i in range(3))) == [0, 2, 4]
+    except ImportError as err:
+        skip(str(err))
+    err = caperr()
+    assert '3it [' in err
+    assert '3/5' not in err
 
 
 def check_lock(args):
