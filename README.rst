@@ -37,9 +37,9 @@ It can also be executed as a module with pipes:
     75.2MB [00:00, 217MB/s]
     9999999
 
-    $ tar -zcf - docs/ | tqdm --bytes --total `du -sb docs/ | cut -f1` \
+    $ tar -zcf - tests/ | tqdm --bytes --total `du -sb tests/ | cut -f1` \
         > backup.tgz
-     32%|██████████▍                      | 8.89G/27.9G [00:42<01:31, 223MB/s]
+     25%|█████████▌                       | 180k/722k [00:00<00:00, 19.5MB/s]
 
 Overhead is low -- about 60ns per iteration (80ns with ``tqdm.gui``), and is
 unit tested against performance regression.
@@ -258,30 +258,30 @@ Backing up a large directory?
 
 .. code:: sh
 
-    $ tar -zcf - docs/ | tqdm --bytes --total `du -sb docs/ | cut -f1` \
+    $ tar -zcf - tests/ | tqdm --bytes --total `du -sb tests/ | cut -f1` \
       > backup.tgz
-     44%|██████████████▊                   | 153M/352M [00:14<00:18, 11.0MB/s]
+     25%|█████████▌                       | 180k/722k [00:00<00:00, 19.5MB/s]
 
 This can be beautified further:
 
 .. code:: sh
 
-    $ BYTES=$(du -sb docs/ | cut -f1)
-    $ tar -cf - docs/ \
+    $ BYTES=$(du -sb tests/ | cut -f1)
+    $ tar -cf - tests/ \
       | tqdm --bytes --total "$BYTES" --desc Processing | gzip \
       | tqdm --bytes --total "$BYTES" --desc Compressed --position 1 \
       > ~/backup.tgz
-    Processing: 100%|██████████████████████| 352M/352M [00:14<00:00, 30.2MB/s]
-    Compressed:  42%|█████████▎            | 148M/352M [00:14<00:19, 10.9MB/s]
+    Processing: 850kB [00:00, 47.8MB/s]
+    Compressed: 24%|██▌                     | 174k/722k [00:00<00:00, 6.37MB/s]
 
 Or done on a file level using 7-zip:
 
 .. code:: sh
 
-    $ 7z a -bd -r backup.7z docs/ | grep Compressing \
-      | tqdm --total $(find docs/ -type f | wc -l) --unit files \
+    $ 7z a -bd -r backup.7z tests/ | grep Compressing \
+      | tqdm --total $(find tests/ -type f | wc -l) --unit files \
       | grep -v Compressing
-    100%|██████████████████████████▉| 15327/15327 [01:00<00:00, 712.96files/s]
+    100%|██████████████████████████▉| 45/45 [01:00<00:00, 712.96files/s]
 
 Pre-existing CLI programs already outputting basic progress information will
 benefit from ``tqdm``'s ``--update`` and ``--update_to`` flags:
