@@ -998,6 +998,36 @@ class tqdm(Comparable):
             self.n = initial
             self.total = total
             self.leave = leave
+
+            def _disabled_init():
+                self.fp = file
+                self.desc = desc or ''
+                self.unit = unit
+                self.unit_scale = unit_scale
+                self.unit_divisor = unit_divisor
+                self.ncols = ncols
+                self.nrows = nrows
+                self.miniters = miniters if miniters is not None else 0
+                self.dynamic_miniters = miniters is None
+                self.ascii = ascii if ascii is not None else False
+                self.gui = gui
+                self.dynamic_ncols = dynamic_ncols
+                self.smoothing = smoothing
+                self._ema_dn = EMA(smoothing)
+                self._ema_dt = EMA(smoothing)
+                self._ema_miniters = EMA(smoothing)
+                self.bar_format = bar_format
+                self.postfix = None
+                self.colour = colour
+                self.last_print_n = initial
+                self.initial = initial
+                self.last_print_t = 0
+                self.start_t = 0
+                self.avg_dn = 0
+                self.avg_dt = 0
+                self._time = time
+
+            _disabled_init()
             return
 
         if kwargs:
