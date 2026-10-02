@@ -274,6 +274,7 @@ class tqdm(Comparable):
         If unspecified, attempts to use environment width. The
         fallback is a meter width of 10 and no limit for the counter and
         statistics. If 0, will not print any meter (only stats).
+        Negative values are treated as unspecified.
     mininterval  : float, optional
         Minimum progress display update interval [default: 0.1] seconds.
     maxinterval  : float, optional
@@ -480,6 +481,7 @@ class tqdm(Comparable):
             The width of the entire output message. If specified,
             dynamically resizes `{bar}` to stay within this bound
             [default: None]. If `0`, will not print any bar (only stats).
+            Negative values are treated as unspecified.
             The fallback is `{bar:10}`.
         prefix  : str, optional
             Prefix message (included in total width) [default: ''].
@@ -533,6 +535,12 @@ class tqdm(Comparable):
         if total and (n >= (total + 0.5) or total == float("inf")):
             # allow float imprecision (#849) or inf (#651)
             total = None
+
+        # sanity check: ncols
+        # a negative width is meaningless: treat it as unset rather than
+        # slicing from the end of the meter (#4)
+        if ncols is not None and ncols < 0:
+            ncols = None
 
         # apply custom scale if necessary
         if unit_scale and unit_scale not in (True, 1):
