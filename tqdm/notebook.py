@@ -273,15 +273,18 @@ class tqdm_notebook(std_tqdm):
         if self.disable:
             return
         super().close()
+        disp = getattr(self, 'disp', None)
+        if disp is None:
+            return  # `__init__` raised before `disp` was set
         # Try to detect if there was an error or KeyboardInterrupt
         # in manual mode: if n < total, things probably got wrong
         if self.total and self.n < self.total:
-            self.disp(bar_style='danger', check_delay=False)
+            disp(bar_style='danger', check_delay=False)
         else:
             if self.leave:
-                self.disp(bar_style='success', check_delay=False)
+                disp(bar_style='success', check_delay=False)
             else:
-                self.disp(close=True, check_delay=False)
+                disp(close=True, check_delay=False)
 
     def clear(self, *_, **__):
         pass
