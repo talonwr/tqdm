@@ -1,6 +1,6 @@
 import re
 from ast import literal_eval
-from subprocess import CalledProcessError  # nosec
+from subprocess import CalledProcessError, TimeoutExpired  # nosec
 
 from pytest import mark, skip
 
@@ -21,6 +21,8 @@ def test_version():
     ("v4.70.1-2-gdeadbee", "4.70.1.post2+gdeadbee"),
     ("v4.70.1", None),  # no `--long` suffix
     ("release-4.70.1-2-gdeadbee", None),  # unparseable tag
+    ("v4.70.0-rc1-2-gdeadbee", None),  # tag prefix is PEP 440, remainder is not
+    ("v4.70.0.dev1-2-gdeadbee", None),  # ditto: `4.70.0.dev1.post2` is not PEP 440
     ("nonsense", None),
 ])
 def test_version_git_describe(described, expected):
@@ -40,6 +42,21 @@ def test_version_git_no_repo():
     from tqdm.version import _git_version
 
     with patch('subprocess.run', side_effect=CalledProcessError(128, 'git')):
+        assert _git_version() is None
+
+
+@mark.parametrize("exc", [
+    FileNotFoundError(2, 'No such file or directory', 'git'),  # git not on PATH
+    PermissionError(13, 'Permission denied', 'git'),
+    TimeoutExpired('git', 5),  # hung => must not block import
+])
+def test_version_git_unavailable(exc):
+    """git missing/denied/hung => `None` rather than raising at import time"""
+    from unittest.mock import patch
+
+    from tqdm.version import _git_version
+
+    with patch('subprocess.run', side_effect=exc):
         assert _git_version() is None
 
 
