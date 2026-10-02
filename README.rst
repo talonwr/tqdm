@@ -98,7 +98,7 @@ Pull and install pre-release ``devel`` branch:
 
 .. code:: sh
 
-    pip install "git+https://github.com/tqdm/tqdm.git@devel#egg=tqdm"
+    pip install "git+https://github.com/talonwr/tqdm.git@devel#egg=tqdm"
 
 Latest Conda release
 ~~~~~~~~~~~~~~~~~~~~
@@ -132,8 +132,8 @@ Latest Docker release
 
 .. code:: sh
 
-    docker pull tqdm/tqdm
-    docker run -i --rm tqdm/tqdm --help
+    docker pull talonwr/tqdm
+    docker run -i --rm talonwr/tqdm --help
 
 Other
 ~~~~~
@@ -1409,11 +1409,11 @@ Contributions
 
 |GitHub-Commits| |GitHub-Issues| |GitHub-PRs| |OpenHub-Status| |GitHub-Contributions| |CII Best Practices|
 
-All source code is hosted on `GitHub <https://github.com/tqdm/tqdm>`__.
+All source code is hosted on `GitHub <https://github.com/talonwr/tqdm>`__.
 Contributions are welcome.
 
 See the
-`CONTRIBUTING <https://github.com/tqdm/tqdm/blob/master/CONTRIBUTING.md>`__
+`CONTRIBUTING <https://github.com/talonwr/tqdm/blob/master/CONTRIBUTING.md>`__
 file for more information.
 
 Developers who have contributed more that 5 *loc* (surviving lines of code):
