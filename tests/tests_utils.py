@@ -62,3 +62,14 @@ def test_envwrap_annotations(monkeypatch):
         return number, string
 
     assert 1.1, "1.1" == annotated()
+
+
+def test_envwrap_unparsable(monkeypatch):
+    """non-numeric `types` values should be ignored, not raise (#2)"""
+    monkeypatch.setenv('FUNC_number', "abc")
+
+    @envwrap("func", types={'number': int})
+    def func(number=None):
+        return number
+
+    assert func() is None  # default, not "abc"

@@ -55,6 +55,7 @@ def envwrap(name, app="", types=None, is_method=False):
         # ignore unknown env vars
         overrides = {k: v for k, v in env_overrides.items() if k in params}
         # infer overrides' `type`s
+        unparsable = set()
         for k in overrides:
             param = params[k]
             if param.annotation is not param.empty:  # typehints
@@ -72,6 +73,10 @@ def envwrap(name, app="", types=None, is_method=False):
                     overrides[k] = types[k](overrides[k])
                 except KeyError:  # keep unconverted (`str`)
                     pass
+                except ValueError:  # unparsable: ignore override
+                    unparsable.add(k)
+        for k in unparsable:  # cannot use the default if it was overridden
+            del overrides[k]
         return part(func, **overrides)
     return wrap
 
