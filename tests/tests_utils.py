@@ -2,7 +2,7 @@ from ast import literal_eval
 from collections import defaultdict
 from typing import Union  # py<3.10
 
-from pytest import warns
+from pytest import mark, warns
 
 from tqdm.utils import envwrap
 
@@ -74,3 +74,44 @@ def test_envwrap_unparsable(monkeypatch):
         return number, default
 
     assert (None, 1.0) == func()
+
+
+@mark.parametrize("val,expected", [
+    ("true", True), ("True", True), ("1", True), ("yes", True), ("on", True),
+    ("false", False), ("False", False), ("0", False), ("no", False), ("off", False),
+    ("", False)])
+def test_envwrap_bool(monkeypatch, val, expected):
+    """`bool('False')` is True, so booleans must be parsed as words (#12)"""
+    monkeypatch.setenv('FUNC_enabled', val)
+    monkeypatch.setenv('FUNC_left', val)
+
+    @envwrap("func")
+    def func(enabled=False, left=True):
+        return enabled, left
+
+    assert (expected, expected) == func()
+
+
+def test_envwrap_bool_unparsable(monkeypatch):
+    """unparsable booleans fall back to the default, like any other type (#12)"""
+    monkeypatch.setenv('FUNC_enabled', "banana")
+
+    @envwrap("func")
+    def func(enabled=False):
+        return enabled
+
+    assert func() is False
+
+
+def test_envwrap_bool_or_str(monkeypatch):
+    """boolean words are parsed, anything else stays a `str` (`ascii` charset) (#12)"""
+    from tqdm.utils import _env_bool_or_str
+
+    monkeypatch.setenv('FUNC_charset', "False")
+    monkeypatch.setenv('FUNC_custom', " .oO0")
+
+    @envwrap("func", types={'charset': _env_bool_or_str, 'custom': _env_bool_or_str})
+    def func(charset=None, custom=None):
+        return charset, custom
+
+    assert (False, " .oO0") == func()
