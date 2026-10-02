@@ -344,6 +344,7 @@ def disp_trim(data, length):
     """
     Trim a string which may contain ANSI control characters.
     """
+    length = max(0, length)  # a negative length would slice from the end (#4)
     if len(data) == disp_len(data):
         return data[:length]
 

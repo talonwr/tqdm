@@ -257,6 +257,30 @@ def test_format_meter():
     assert format_meter(1, None, 12, ncols=0, bar_format="{desc}", prefix=long_desc) == long_desc
 
 
+def test_format_meter_negative_ncols():
+    """`ncols < 0` is meaningless and should behave like `ncols=None` (#4)"""
+    format_meter = tqdm.format_meter
+
+    # all return paths: with/without total, with/without `bar_format`
+    for total in (1000, None):
+        assert format_meter(5, total, 13, ncols=-1) == format_meter(5, total, 13)
+        assert format_meter(5, total, 13, ncols=-20) == format_meter(5, total, 13, ncols=None)
+        for bar_format in (None, "{l_bar}{bar}{r_bar}", "{desc}"):
+            kwargs = {'bar_format': bar_format} if bar_format else {}
+            assert format_meter(5, total, 13, ncols=-1, prefix="x" * 50, **kwargs) == (
+                format_meter(5, total, 13, ncols=None, prefix="x" * 50, **kwargs))
+
+    # and the meter is not garbled in practice
+    with UnicodeIO() as tmp_file:
+        with trange(3, ncols=-5, file=tmp_file, mininterval=0, miniters=0) as t:
+            assert list(t) == [0, 1, 2]
+    bars = get_bar(tmp_file.getvalue())
+    assert bars
+    assert all(len(bar) > 1 for bar in bars)
+    # the closing meter keeps its tail instead of losing the last `abs(ncols)` characters
+    assert any(bar.endswith("]") and "3/3" in bar for bar in bars)
+
+
 def test_ANSI_escape_codes():
     ansi = {'BOLD': '\033[1m', 'RED': '\033[91m', 'END': '\033[0m'}
     desc_raw = '{BOLD}{RED}Colored{END} description'
