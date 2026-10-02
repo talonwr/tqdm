@@ -851,6 +851,7 @@ class tqdm(Comparable):
 
         tqdm_kwargs = tqdm_kwargs.copy()
         deprecated_t = [tqdm_kwargs.pop('deprecated_t', None)]
+        given_total = tqdm_kwargs.pop('total', None)  # applied to every call
 
         def inner_generator(df_function='apply'):
             def inner(df, func, *args, **kwargs):
@@ -866,7 +867,7 @@ class tqdm(Comparable):
                 """
 
                 # Precompute total iterations
-                total = tqdm_kwargs.pop("total", getattr(df, 'ngroups', None))
+                total = given_total if given_total is not None else getattr(df, 'ngroups', None)
                 if total is None:  # not grouped
                     if df_function == 'applymap':
                         total = df.size

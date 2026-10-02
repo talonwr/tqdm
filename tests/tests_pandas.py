@@ -18,6 +18,15 @@ def test_pandas_setup(caperr):
     assert '100/123' in caperr()
 
 
+def test_pandas_setup_reuse(caperr):
+    """`total=` given to `tqdm.pandas()` applies to every call (issue #1)"""
+    tqdm.pandas(leave=True, ascii=True, total=123)
+    series = pd.Series(randint(0, 50, (100,)))
+    series.progress_apply(lambda x: x + 10)
+    series.progress_apply(lambda x: x + 10)
+    assert caperr().count('100/123') == 2
+
+
 def test_pandas_rolling_expanding(caperr):
     """Test pandas.{Series,DataFrame}.{rolling,expanding}"""
     tqdm.pandas(leave=True, ascii=True)
