@@ -174,8 +174,13 @@ def main(fp=sys.stderr, argv=None):
     else:
         # argv.pop(log_idx)
         # logLevel = argv.pop(log_idx)
+        if log_idx + 1 >= len(argv):
+            raise SystemExit(f"Error: --log requires a level argument (e.g. --log INFO or --log=INFO)\n{__doc__}")
         logLevel = argv[log_idx + 1]
-    logging.basicConfig(level=getattr(logging, logLevel),
+    valid_levels = set(logging._levelToName.values())
+    if logLevel.upper() not in valid_levels and logLevel not in valid_levels:
+        raise SystemExit(f"Error: '{logLevel}' is not a valid log level. Choose from: {', '.join(sorted(valid_levels))}\n{__doc__}")
+    logging.basicConfig(level=getattr(logging, logLevel.upper()),
                         format="%(levelname)s:%(module)s:%(lineno)d:%(message)s")
 
     # py<3.13 doesn't dedent docstrings
